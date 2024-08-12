@@ -8,16 +8,16 @@
 // ******** Variables
 
 // Acceleration
-extern float Xaxis_accn;
-extern float Yaxix_accn;
-extern float Zaxis_accn;
+extern volatile float Xaxis_accn;
+extern volatile float Yaxix_accn;
+extern volatile float Zaxis_accn;
 
 
 // Window Size
-
+extern int window_size;
 
 // Sampling Frequency
-
+extern int sample_freq_in_khz;
 
 
 #endif // _GLOBAL_VARIABLES_

@@ -1,11 +1,20 @@
 #include <Arduino_LSM9DS1.h>
 
-#include "hello.h"
+#include "IMU.h"
+#include "SWAT.h"
 
 // Global Variables
-float Xaxis_accn;
-float Yaxix_accn;
-float Zaxis_accn;
+
+// Acceleration
+volatile float Xaxis_accn;
+volatile float Yaxix_accn;
+volatile float Zaxis_accn;
+
+//Window size
+int window_size;
+
+// Sample Frequency
+int sample_freq_in_khz;
 
 void setup() {
   Serial.begin(9600);
@@ -13,5 +22,5 @@ void setup() {
 
 void loop() 
 {
-  testing();
+
 }

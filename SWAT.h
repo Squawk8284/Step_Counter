@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-/ **************** FUNCTION DEFINATIONS*************/
+/**************** FUNCTION DEFINATIONS*************/
 
 
 

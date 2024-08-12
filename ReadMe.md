@@ -5,7 +5,7 @@ Xaxis_accn
 Yaxix_accn
 Zaxis_accn
 
-windows_size
+window_size
 
-sample_freq
+sample_freq_in_khz
 

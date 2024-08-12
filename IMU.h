@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-/ **************** FUNCTION DEFINATIONS*************/
+/**************** FUNCTION DEFINATIONS*************/
 
 void initialise_imu(void);
 
