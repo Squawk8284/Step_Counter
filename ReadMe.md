@@ -7,5 +7,5 @@ Zaxis_accn
 
 window_size
 
-sample_freq_in_khz
+sample_freq_in_hz
 

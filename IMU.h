@@ -11,9 +11,13 @@ extern "C" {
 
 /**************** FUNCTION DEFINATIONS*************/
 
-void initialise_imu(void);
+int initialise_imu(void);
 
-void read_accn_data(float *Xaxis_accn, float *Yaxix_accn, float *Zaxis_accn);
+void stop_imu(void);
+
+void read_accn_data(float *x_axis, float *y_axis, float *z_axis);
+
+float sample_rate_accelerometer(void);
 
 
 

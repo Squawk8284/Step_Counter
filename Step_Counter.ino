@@ -1,5 +1,3 @@
-#include <Arduino_LSM9DS1.h>
-
 #include "IMU.h"
 #include "SWAT.h"
 
@@ -14,10 +12,16 @@ volatile float Zaxis_accn;
 int window_size;
 
 // Sample Frequency
-int sample_freq_in_khz;
+float sample_freq_in_hz;
 
 void setup() {
   Serial.begin(9600);
+  if(!initialise_imu())
+  {
+    while(1);
+  }
+  sample_freq_in_hz = sample_rate_accelerometer();
+  window_size = 40;
 }
 
 void loop() 

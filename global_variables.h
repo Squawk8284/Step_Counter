@@ -17,7 +17,7 @@ extern volatile float Zaxis_accn;
 extern int window_size;
 
 // Sampling Frequency
-extern int sample_freq_in_khz;
+extern float sample_freq_in_hz;
 
 
 #endif // _GLOBAL_VARIABLES_
