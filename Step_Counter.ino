@@ -6,10 +6,12 @@
 #define BAUD_RATE 9600
 #define WINDOW_SIZE 24
 
-#define LEG_LENGTH 1            // length in m
-#define VERTICAL_COM_DISP 0.005 // length in m
+#define LEG_LENGTH 0.963 // length in m
+#define VERTICAL_COM_DISP 0.0261 // length in m
+#define FOOT_LEN 0.244 //length in m
+#define PROP_CONST 0.83 //according to Han et al
 
-#define FALSE_TIME 300
+#define FALSE_TIME 300 //time in ms
 
 /* ----------------- Global Variations ------------------ */
 
@@ -110,15 +112,14 @@ void loop()
     {
       steps++;
 
-      step_length = 2 * (sqrt((2 * VERTICAL_COM_DISP * LEG_LENGTH) - (sq(VERTICAL_COM_DISP))));
+      step_length = (2 * (sqrt((2 * VERTICAL_COM_DISP * LEG_LENGTH) - (sq(VERTICAL_COM_DISP))))) +  (PROP_CONST * FOOT_LEN);
 
-      Serial.print(local_mean_acc);
+      Serial.print("Steps = ");
+      Serial.print(steps);
       Serial.print("\t");
+      Serial.print("Distance Travelled = ");
       Serial.print(step_length * steps);
-      Serial.print("\t");
-      Serial.print(step_length);
-      Serial.print("\t");
-      Serial.println(steps);
+      Serial.println(" m");
 
       prev_start_time = current_false_time;
     }
@@ -144,8 +145,8 @@ void calibrate(void)
     acc_buf[i] = 0;
   }
 
-  Serial.println("Calibrating, Stand still ..........");
-  delay(10000);
+  Serial.println("Calibrating, Stand still for 10s..........");
+  delay(1000);
 
   start_time = millis();
   curren_time = start_time;
