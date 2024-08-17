@@ -6,6 +6,11 @@
 #define BAUD_RATE 9600
 #define WINDOW_SIZE 24
 
+#define LEG_LENGTH 1            // length in m
+#define VERTICAL_COM_DISP 0.005 // length in m
+
+#define FALSE_TIME 300
+
 /* ----------------- Global Variations ------------------ */
 
 // Acceleration
@@ -26,6 +31,7 @@ int index1;
 
 // Steps
 int steps;
+float step_length;
 
 // timings
 unsigned long prev_start_time;
@@ -66,6 +72,8 @@ void setup()
   // intialise steps
   steps = 0;
 
+  step_length = 0;
+
   // initialise time
   prev_start_time = millis();
   current_false_time = prev_start_time;
@@ -98,11 +106,21 @@ void loop()
 
     current_false_time = millis();
 
-    if ((local_mean_acc > THRESHOLD) && ((current_false_time - prev_start_time) > 300))
+    if ((local_mean_acc > THRESHOLD) && ((current_false_time - prev_start_time) > FALSE_TIME))
     {
       steps++;
-      prev_start_time = current_false_time;
+
+      step_length = 2 * (sqrt((2 * VERTICAL_COM_DISP * LEG_LENGTH) - (sq(VERTICAL_COM_DISP))));
+
+      Serial.print(local_mean_acc);
+      Serial.print("\t");
+      Serial.print(step_length * steps);
+      Serial.print("\t");
+      Serial.print(step_length);
+      Serial.print("\t");
       Serial.println(steps);
+
+      prev_start_time = current_false_time;
     }
 
     // increment and reset index
