@@ -13,7 +13,7 @@ This proposed method computes the magnitude of acceleration ai using Eq (1). The
 
 ![Swat Equation](SWAT_EQUATION.png)
 
-In this case, the mean was calculated for each sample using an overlapped sliding window averaging technique (SWAT). The averaging window size was fixed to 24 samples following the same rule as 0.2s interval. For this method, the user are asked to stand still at least 10 seconds before starting the walk. The alignment error and gravity were reduced from mean acceleration value by subtracting the mean value during this standing position as follows.
+In this case, the mean was calculated for each sample using an overlapped sliding window averaging technique (SWAT). The averaging window size was fixed to 24 samples (due to sampling frequency being 119 Hz.) following the same rule as 0.2s interval. For this method, the user are asked to stand still at least 10 seconds before starting the walk. The alignment error and gravity were reduced from mean acceleration value by subtracting the mean value during this standing position as follows.
 
 ![Error Correction](<Error Correction.png>)
 
