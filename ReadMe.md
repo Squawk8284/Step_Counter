@@ -1,238 +1,93 @@
-# **Step Counter and Stride Length measurement**
+# Step Counter and Stride Length Measurement
 
-## ***Question***
+This repository provides an implementation for accurately calculating steps and measuring stride length using an accelerometer sensor. The sensor is positioned along the neckband to measure user activity. The solution combines a sliding window averaging algorithm for step detection and an inverted pendulum model for stride length estimation, ensuring precise distance measurement.
 
-### *Find out the distance covered from the seat. Note that the placement of the sensor is along with the neckband.*
+---
 
-## ***Answer***
+## Features
 
-#### Step Calculation
-Algorithm to find the steps used is Sliding Window Averaging Technique (SWAT).
+- **Step Detection**: 
+  - Implements the Sliding Window Averaging Technique (SWAT) to calculate step counts based on acceleration data.
+  - Eliminates alignment error and gravity interference using a calibration phase.
+  - Uses a threshold-based approach to detect steps, discarding false positives with a time-based filter.
 
-This proposed method computes the magnitude of acceleration ai using Eq (1). The local mean acceleration āi was then computed using the following equation
+- **Stride Length Measurement**:
+  - Utilizes biomechanical models to compute stride length based on vertical displacement of the center of mass (COM).
+  - Adapts stride length calculations using anthropometric dimensions for precise results.
 
-![Swat Equation](SWAT_EQUATION.png)
+---
 
-In this case, the mean was calculated for each sample using an overlapped sliding window averaging technique (SWAT). The averaging window size was fixed to 24 samples (due to sampling frequency being 119 Hz.) following the same rule as 0.2s interval. For this method, the user are asked to stand still at least 10 seconds before starting the walk. The alignment error and gravity were reduced from mean acceleration value by subtracting the mean value during this standing position as follows.
+## Step Calculation
 
-![Error Correction](<Error Correction.png>)
+The step detection algorithm uses the SWAT methodology, which processes acceleration data as follows:
 
-Step is dected using threshold of ```1.2 m/s^2``` and to avoid false prediction, for each detected steps any peak between next 0.30 seconds were discarded.
+1. **Magnitude Calculation**:
+   The magnitude of acceleration is computed using the equation:  
+   \[
+   a_i = \sqrt{a_{x,i}^2 + a_{y,i}^2 + a_{z,i}^2}
+   \]
 
-#### Stride Length
+2. **Sliding Window Averaging**:
+   A 24-sample overlapping window is applied to calculate the local mean acceleration:
+   \[
+   \bar{a}_i = \frac{1}{N} \sum_{k=i}^{i+N-1} a_k
+   \]
+   - Window size: 24 samples (0.2 seconds interval).
+   - Sampling frequency: 119 Hz.
 
-The most common approach to measure the average step length is to consider human gait as an inverted pendulum model. Based on this biomechanical model, Zijlstra et al proposed a relationship between the step length and the vertical displacement of the COM of human body.
+3. **Calibration**:
+   Users stand still for 10 seconds before starting the walk, during which the alignment error and gravity are subtracted from the mean acceleration.
 
-![Inverted Pendulum calculation for stride length](<Inverted Pendulum.png>)
+4. **Threshold Detection**:
+   A step is detected if the corrected acceleration exceeds **1.2 m/s²**. Peaks within **0.30 seconds** of a detected step are ignored to prevent false positives.
 
+---
 
+## Stride Length Calculation
 
-#### Len legth calculations
+Stride length estimation is based on the inverted pendulum biomechanical model, which relates step length to the vertical displacement of the center of mass (COM):
 
-Ref: Indian Anthropomatric dimension by D. Chakrabarti.
-![Leg length Calculations](<Leg_length anthro.jpg>)
-![Leg Length Mean](Leg_length_mean.jpg)
+\[
+Step\_Length = 2 \times \sqrt{2 \times COM\_Disp \times Leg\_Length - COM\_Disp^2} + (K \times Foot\_Length)
+\]
 
+- **COM Displacement**: Referenced from [Saini et al., 1998].
+- **Leg Length**: Anthropometric dimensions sourced from [Indian Anthropometric Dimensions by D. Chakrabarti].
+- **Proportional Constant (K)**: Calibrated as 0.83.
 
-#### Pelvic COM displacement
+---
 
-```
-Ref:
-Saini, M., Kerrigan, D. C., Thirunarayan, M. A., & Duff-Raffaele, M. (1998). The Vertical Displacement of the Center of Mass During Walking: A Comparison of Four Measurement Methods. Journal of Biomechanical Engineering, 120(1), 133. doi:10.1115/1.2834293
-```
+## Usage
 
-![Pelvic Displacement](<Pelvic Displacement.jpg>)
+1. **Sensor Placement**:
+   Attach the accelerometer sensor along the neckband for optimal accuracy.
 
-## Code
-```
-#include <Arduino_LSM9DS1.h>
+2. **Calibration**:
+   Ensure the user stands still for at least 10 seconds at the start to remove alignment errors and calibrate gravity.
 
-/* ----------------- Definations ------------------ */
+3. **Data Collection**:
+   - The sensor records acceleration in the x, y, and z axes at a sampling rate of 119 Hz.
+   - Acceleration is processed to compute step count and stride length.
 
-#define THRESHOLD 1.2
-#define BAUD_RATE 9600
-#define WINDOW_SIZE 24
+4. **Results**:
+   - **Steps**: Total steps detected during activity.
+   - **Distance**: Distance traveled based on calculated stride length.
 
-#define LEG_LENGTH 0.963 // length in m
-#define VERTICAL_COM_DISP 0.0261 // length in m
-#define FOOT_LEN 0.244 //length in m
-#define PROP_CONST 0.83 //according to Han et al
+---
 
-#define FALSE_TIME 300 //time in ms
+## References
 
-/* ----------------- Global Variations ------------------ */
+1. **Indian Anthropometric Dimensions** by D. Chakrabarti.
+2. **Saini, M., Kerrigan, D. C., et al. (1998)**: *The Vertical Displacement of the Center of Mass During Walking*. *Journal of Biomechanical Engineering*, 120(1), 133. [DOI:10.1115/1.2834293](https://doi.org/10.1115/1.2834293)
 
-// Acceleration
-float Xaxis_accn;
-float Yaxis_accn;
-float Zaxis_accn;
+---
 
-float mag_of_acc;
+## Contributing
 
-float acc_buf[WINDOW_SIZE];
+Contributions to improve step detection and stride length estimation are welcome. Please submit a pull request or open an issue for discussion.
 
-float local_mean_acc;
+---
 
-float stand_acc;
+## License
 
-// index
-int index1;
-
-// Steps
-int steps;
-float step_length;
-
-// timings
-unsigned long prev_start_time;
-unsigned long current_false_time;
-
-/* ----------------- SETUP ------------------ */
-
-void setup()
-{
-  Serial.begin(BAUD_RATE);
-  while (!Serial)
-    ; // wait till serial initialises
-  Serial.println("Started.....");
-
-  if (!IMU.begin())
-  {
-    Serial.println("FAILED TO INITIALISE IMU!!!!");
-    while (1)
-      ;
-  }
-
-  Serial.print("Acceralation Rate is = ");
-  Serial.print(IMU.accelerationSampleRate());
-  Serial.println(" Hz");
-  Serial.println("Acceleration in m/s"); // Multiple IMU accelaration with '10'
-
-  calibrate();
-
-  // initialise buffer
-  for (int i = 0; i < WINDOW_SIZE; i++)
-  {
-    acc_buf[i] = 0;
-  }
-
-  // initialise index
-  index1 = 0;
-
-  // intialise steps
-  steps = 0;
-
-  step_length = 0;
-
-  // initialise time
-  prev_start_time = millis();
-  current_false_time = prev_start_time;
-}
-
-/* ----------------- LOOP ------------------ */
-
-void loop()
-{
-
-  if (IMU.accelerationAvailable())
-  {
-    IMU.readAcceleration(Xaxis_accn, Yaxis_accn, Zaxis_accn);
-    Xaxis_accn *= 10; // Convert to m/s
-    Yaxis_accn *= 10; // Convert to m/s
-    Zaxis_accn *= 10; // Convert to m/s
-
-    mag_of_acc = sqrt((Xaxis_accn * Xaxis_accn) + (Yaxis_accn * Yaxis_accn) + (Zaxis_accn * Zaxis_accn));
-
-    acc_buf[index1] = mag_of_acc / WINDOW_SIZE;
-
-    local_mean_acc = 0;
-
-    for (int i = 0; i < WINDOW_SIZE; i++)
-    {
-      local_mean_acc += acc_buf[i];
-    }
-
-    local_mean_acc -= stand_acc;
-
-    current_false_time = millis();
-
-    if ((local_mean_acc > THRESHOLD) && ((current_false_time - prev_start_time) > FALSE_TIME))
-    {
-      steps++;
-
-      step_length = (2 * (sqrt((2 * VERTICAL_COM_DISP * LEG_LENGTH) - (sq(VERTICAL_COM_DISP))))) +  (PROP_CONST * FOOT_LEN);
-
-      Serial.print("Steps = ");
-      Serial.print(steps);
-      Serial.print("\t");
-      Serial.print("Distance Travelled = ");
-      Serial.print(step_length * steps);
-      Serial.println(" m");
-
-      prev_start_time = current_false_time;
-    }
-
-    // increment and reset index
-    index1 = (index1 + 1) % WINDOW_SIZE;
-  }
-}
-
-/* ----------------- FUNCTIONS ------------------ */
-
-void calibrate(void)
-{
-  float mean = 0;
-  int mean_count = 0;
-  int cal_index = 0;
-
-  unsigned long start_time, curren_time;
-
-  // initialise buffer
-  for (int i = 0; i < WINDOW_SIZE; i++)
-  {
-    acc_buf[i] = 0;
-  }
-
-  Serial.println("Calibrating, Stand still for 10s..........");
-  delay(1000);
-
-  start_time = millis();
-  curren_time = start_time;
-
-  while ((curren_time - start_time) < 10000)
-  {
-    if (IMU.accelerationAvailable())
-    {
-      IMU.readAcceleration(Xaxis_accn, Yaxis_accn, Zaxis_accn);
-      Xaxis_accn *= 10; // Convert to m/s
-      Yaxis_accn *= 10; // Convert to m/s
-      Zaxis_accn *= 10; // Convert to m/s
-
-      mag_of_acc = sqrt((Xaxis_accn * Xaxis_accn) + (Yaxis_accn * Yaxis_accn) + (Zaxis_accn * Zaxis_accn));
-
-      acc_buf[cal_index] = mag_of_acc / WINDOW_SIZE;
-
-      stand_acc = 0;
-
-      for (int i = 0; i < WINDOW_SIZE; i++)
-      {
-        stand_acc += acc_buf[i];
-      }
-
-      mean += stand_acc;
-      mean_count++;
-
-      // increment and reset index
-      cal_index = (cal_index + 1) % WINDOW_SIZE;
-    }
-
-    curren_time = millis();
-  }
-
-  stand_acc = mean / mean_count;
-
-  Serial.print("Mean standing acceleration = ");
-  Serial.println(stand_acc);
-  delay(1000);
-  Serial.println("Start Walking.....");
-}
-```
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
